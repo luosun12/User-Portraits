@@ -20,13 +20,16 @@ func (s *SqlController) InsertUniverse() (err error) {
 				fmt.Println("Hooks' error:", err)
 				return fmt.Errorf("UID%v: update universe failed:%v\n", newuni.UserID, err)
 			}
+			// 更新位置信息
+			err = s.AfterCreateUniverse(newuni.Ip)
 			fmt.Println("UID", newuni.UserID, ":update universe success")
-			return nil
+			return err
 		} else {
 			fmt.Println("update universe failed:UniverseChannel error")
 			return fmt.Errorf("update universe failed:UniverseChannel error")
 		}
 	})
+
 }
 
 func (s *SqlController) UpdateUniverse() (err error) {
