@@ -16,14 +16,18 @@ type ContentType struct {
 }
 
 type Universe struct {
-	UserID   uint     `gorm:"primary_key;" json:"user_id"`
-	Ip       string   `gorm:"type:char" json:"ip"`
-	PeriodID uint     `gorm:"type:int;" json:"period_id"`
-	Date     string   `gorm:"type:char;" json:"date"`
-	Count    uint     `gorm:"type:int;default:1" json:"count"`
-	Flow     uint     `gorm:"type:int;default:0" json:"flow"`
-	Latency  uint     `gorm:"type:int;default:0" json:"latency"`
-	User     Userinfo `gorm:"ForeignKey:UserID;references:ID"`
+	UserID    uint     `gorm:"primary_key;" json:"user_id"`
+	Ip        string   `gorm:"type:char" json:"ip"`
+	District  string   `gorm:"type:varchar" json:"district"`
+	City      string   `gorm:"type:varchar" json:"city"`
+	Latitude  float64  `gorm:"type:float" json:"latitude"`
+	Longitude float64  `gorm:"type:float" json:"longitude"`
+	PeriodID  uint     `gorm:"type:int;" json:"period_id"`
+	Date      string   `gorm:"type:char;" json:"date"`
+	Count     uint     `gorm:"type:int;default:1" json:"count"`
+	Flow      uint     `gorm:"type:int;default:0" json:"flow"`
+	Latency   uint     `gorm:"type:int;default:0" json:"latency"`
+	User      Userinfo `gorm:"ForeignKey:UserID;references:ID"`
 }
 
 type Interests struct {
@@ -33,8 +37,10 @@ type Interests struct {
 }
 
 type Score struct {
-	UserID uint `gorm:"primary_key" json:"user_id"`
-	Score  uint `gorm:"type:int;default:0" json:"score"`
+	UserID uint     `gorm:"primary_key" json:"user_id"`
+	Score  float64  `gorm:"type:float;default:0" json:"score"`
+	Date   string   `gorm:"type:char;" json:"date"`
+	User   Userinfo `gorm:"ForeignKey:UserID;references:ID"`
 }
 
 // Gorm的特殊方法，指定表名
@@ -57,4 +63,11 @@ func (itr *Interests) TableName() string {
 
 func (sc *Score) TableName() string {
 	return "score"
+}
+
+// 查询每日平均分结构体
+
+type AverageScore struct {
+	Date    string  `json:"date"`
+	Average float64 `json:"average_score"`
 }

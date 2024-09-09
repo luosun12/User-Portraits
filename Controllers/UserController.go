@@ -1,4 +1,4 @@
-package SQLController
+package Controllers
 
 import (
 	"UserPortrait/etc"

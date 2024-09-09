@@ -27,7 +27,6 @@ func TokenValid(c *gin.Context) error {
 	if tokenString == "" {
 		return fmt.Errorf("token is missing")
 	}
-	fmt.Println(tokenString)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -55,7 +54,7 @@ func ExtractToken(c *gin.Context) string {
 	bearerToken := c.GetHeader("Authorization")
 	if len(strings.Split(bearerToken, " ")) == 2 {
 		token := strings.Split(bearerToken, " ")[1]
-		return token[:7]
+		return token
 	}
 	return ""
 }

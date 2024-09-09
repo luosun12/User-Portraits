@@ -1,27 +1,32 @@
-package SQLController
+package Controllers
 
 import (
 	"UserPortrait/etc"
-	"UserPortrait/service"
 	"fmt"
 	"gorm.io/gorm"
+	"strconv"
 	"sync"
 )
 
 var mutex sync.Mutex
 
+// 插入新universe记录
 func (s *SqlController) InsertUniverse() (err error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	return s.DB.Transaction(func(tx *gorm.DB) error {
 		if newuni, ok := <-etc.UniverseChannel; ok {
+			// 首先更新位置信息
+			newuni.District, newuni.City, newuni.Longitude, newuni.Latitude, err = s.UpdateLocationInfo(newuni.Ip)
+			if err != nil {
+				return fmt.Errorf("UID%v: update universe failed:%v\n", newuni.UserID, err)
+			}
+			// 创建完全体universe
 			err = tx.Create(&newuni).Error
 			if err != nil {
 				fmt.Println("Hooks' error:", err)
 				return fmt.Errorf("UID%v: update universe failed:%v\n", newuni.UserID, err)
 			}
-			// 更新位置信息
-			err = s.AfterCreateUniverse(newuni.Ip)
 			fmt.Println("UID", newuni.UserID, ":update universe success")
 			return err
 		} else {
@@ -32,6 +37,7 @@ func (s *SqlController) InsertUniverse() (err error) {
 
 }
 
+// 满足时空相同条件的universe更新
 func (s *SqlController) UpdateUniverse() (err error) {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -55,15 +61,13 @@ func (s *SqlController) UpdateUniverse() (err error) {
 	})
 }
 
-func (s *SqlController) AfterCreateUniverse(ip string) (err error) {
-	locinfo, err := service.GetLocation(ip)
+// 根据IP更新位置信息
+func (s *SqlController) UpdateLocationInfo(ip string) (string, string, float64, float64, error) {
+	locinfo, err := GetLocation(ip)
 	if err != nil {
-		return fmt.Errorf("Get location failed %v\n", err)
+		return "", "", 0, 0, fmt.Errorf("Get location failed %v\n", err)
 	}
-	result := s.DB.Table("universe").Where("ip = ? AND district = ?", ip, "").Updates(map[string]interface{}{
-		"district":  locinfo.Data.District,
-		"latitude":  locinfo.Data.Lat,
-		"longitude": locinfo.Data.Lng,
-	}).Error
-	return result
+	lat, _ := strconv.ParseFloat(locinfo.Data.Lat, 64)
+	lng, _ := strconv.ParseFloat(locinfo.Data.Lng, 64)
+	return locinfo.Data.District, locinfo.Data.City, lat, lng, nil
 }

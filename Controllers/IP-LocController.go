@@ -1,5 +1,5 @@
 // TODO: 实现空间、时间、流量分布的接口函数；在创建Universe后作为hook调用
-package service
+package Controllers
 
 import (
 	"UserPortrait/etc"
@@ -51,9 +51,6 @@ func GetLocation(ip string) (LocInfo, error) {
 		return LocInfo{}, errinfo
 	}
 	req.Header.Add("X-APISpace-Token", etc.APISpaceKey)
-	for key, value := range req.Header {
-		fmt.Printf("%s: %s\n", key, value)
-	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -67,7 +64,6 @@ func GetLocation(ip string) (LocInfo, error) {
 		errinfo := fmt.Errorf("err in GetLocation/readall:%v", err)
 		return LocInfo{}, errinfo
 	}
-	fmt.Println(string(body))
 	var locinfo = LocInfo{}
 	err = json.Unmarshal(body, &locinfo)
 	return locinfo, err

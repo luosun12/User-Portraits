@@ -21,7 +21,13 @@ func InitRouter() *gin.Engine {
 		// 使用gin自定义中间件
 		private.Use(middleware.JwtAuthentication())
 		private.GET("/main", service.Ping)
-		private.POST("/upload/avatar", service.UploadAvatar)
+
+		up := private.Group("/upload")
+		up.POST("/avatar", service.UploadAvatar)
+		up.POST("/score", service.SubmitScore)
+
+		sc := private.Group("/score")
+		sc.GET("/average_score", service.GetAverageScore)
 	}
 	return r
 }

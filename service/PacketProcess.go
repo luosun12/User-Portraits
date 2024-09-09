@@ -1,8 +1,8 @@
 package service
 
 import (
+	"UserPortrait/Controllers"
 	"UserPortrait/etc"
-	"UserPortrait/service/SQLController"
 	"UserPortrait/service/database"
 	"errors"
 	"fmt"
@@ -17,7 +17,7 @@ func Packet2Universe(MAC string, IP string, datetime string, flow uint, latency 
 	if err != nil {
 		return err
 	}
-	var sql = SQLController.SqlController{DB: db}
+	var sql = Controllers.SqlController{DB: db}
 	if MAC == "" {
 		fmt.Println("MAC is empty")
 		return fmt.Errorf("err:MAC is empty")
@@ -57,9 +57,6 @@ func Packet2Universe(MAC string, IP string, datetime string, flow uint, latency 
 			etc.UniverseChannel <- newuni
 			// 若该记录不存在，则创建记录
 			if err = sql.InsertUniverse(); err != nil {
-				return err
-			}
-			if err = sql.AfterCreateUniverse(IP); err != nil {
 				return err
 			}
 		} else {

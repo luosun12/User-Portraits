@@ -1,9 +1,10 @@
 package service
 
 import (
+	"UserPortrait/Controllers"
 	"UserPortrait/etc"
-	"UserPortrait/service/SQLController"
 	"UserPortrait/service/database"
+	"UserPortrait/token"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,7 @@ func Register(c *gin.Context) {
 		fmt.Printf("register err:%v\n", err)
 		return
 	}
-	var sql = SQLController.SqlController{DB: db}
+	var sql = Controllers.SqlController{DB: db}
 	var user etc.Userinfo
 
 	newname := context.PostForm("username")
@@ -90,7 +91,7 @@ func Login(c *gin.Context) {
 		fmt.Printf("login err:%v", err)
 		return
 	}
-	var sql = SQLController.SqlController{DB: db}
+	var sql = Controllers.SqlController{DB: db}
 	var user etc.Userinfo
 	username := context.PostForm("username")
 	user, err = sql.FindUserByName(username)
@@ -98,20 +99,28 @@ func Login(c *gin.Context) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			context.JSON(http.StatusUnauthorized, gin.H{
 				"message": "用户名不存在,请注册！",
+				"token":   "",
 			})
 			fmt.Printf("login err:user %v is not existed\n", username)
 			return
 		} else {
 			context.JSON(http.StatusInternalServerError, gin.H{
 				"message": "数据库查询错误，请重试",
+				"token":   "",
 			})
 			fmt.Printf("login err:%v\n", err)
 			return
 		}
 	} else {
 		if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(context.PostForm("password"))) == nil {
+			Token, errfortoken := token.GenerateToken(user.ID)
+			for errfortoken != nil {
+				Token, errfortoken = token.GenerateToken(user.ID)
+				fmt.Printf("login err:token generate failed,retrying\n")
+			}
 			context.JSON(http.StatusOK, gin.H{
 				"message": "登录成功",
+				"token":   Token,
 			})
 			fmt.Printf("login: user %v login success\n", username)
 			return
