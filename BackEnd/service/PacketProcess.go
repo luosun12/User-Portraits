@@ -11,8 +11,10 @@ import (
 )
 
 // 根据解包脚本更新universe信息，保证流时、空时分布的核心
+// 需别处增加判定station_id的部分
 
-func Packet2Universe(MAC string, IP string, datetime string, flow uint, latency uint) (err error) {
+func Packet2Universe(station_id uint, loss_flag bool, MAC string, IP string, datetime string, flow uint, latency uint) (err error) {
+	tablename := etc.ChooseTable(station_id, "universe")
 	db, err := database.InitDB()
 	if err != nil {
 		return err
@@ -50,25 +52,32 @@ func Packet2Universe(MAC string, IP string, datetime string, flow uint, latency 
 		return err
 	}
 
-	FoundUniverse := db.Table("universe").Where("user_id =? AND ip =? AND date =? AND period_id =?", ID, IP, date, periodID).Take(&uni)
+	FoundUniverse := db.Table(tablename).Where("user_id =? AND ip =? AND date =? AND period_id =?", ID, IP, date, periodID).Take(&uni)
 	if FoundUniverse.Error != nil {
 		if errors.Is(FoundUniverse.Error, gorm.ErrRecordNotFound) {
 			newuni = etc.Universe{UserID: ID, Ip: IP, Date: date, Flow: flow, Latency: latency, PeriodID: periodID}
 			etc.UniverseChannel <- newuni
 			// 若该记录不存在，则创建记录
-			if err = sql.InsertUniverse(); err != nil {
+			if err = sql.InsertUniverse(tablename); err != nil {
 				return err
 			}
 		} else {
 			return FoundUniverse.Error
 		}
 	} else {
-		// 若该记录存在，即时间段与IP均重复，则累加flow，取latency平均，而后更新
+		// 若该记录存在，即时间段与IP均重复，则累加flow，取latency平均；若LossFlag为true，则err_count+1
+		err_count := uni.ErrCount
 		flow += uni.Flow
-		latency = (uni.Latency + latency) / 2
-		newuni = etc.Universe{UserID: uni.UserID, Ip: IP, Date: date, Flow: flow, Latency: latency, PeriodID: periodID, Count: uni.Count + 1}
+		if loss_flag {
+			err_count += 1
+			newuni = etc.Universe{UserID: uni.UserID, Ip: IP, Date: date, Flow: flow, Latency: uni.Latency, PeriodID: periodID, Count: uni.Count + 1, ErrCount: err_count}
+		} else {
+			latency = (uni.Latency + latency) / 2
+			newuni = etc.Universe{UserID: uni.UserID, Ip: IP, Date: date, Flow: flow, Latency: latency, PeriodID: periodID, Count: uni.Count + 1, ErrCount: uni.ErrCount}
+		}
+
 		etc.UniverseChannel <- newuni
-		if err := sql.UpdateUniverse(); err != nil {
+		if err := sql.UpdateUniverse(tablename); err != nil {
 			return err
 		}
 	}

@@ -14,7 +14,7 @@ import (
 
 func SubmitScore(c *gin.Context) {
 	userID, _ := strconv.ParseUint(c.PostForm("id"), 10, 32)
-	score, _ := strconv.ParseFloat(c.PostForm("score"), 64)
+	score, _ := strconv.ParseFloat(c.PostForm("score"), 32)
 	date := time.Now().Format(time.DateOnly)
 	db, err := database.InitDB()
 	if err != nil {
@@ -27,7 +27,7 @@ func SubmitScore(c *gin.Context) {
 	sql := Controllers.SqlController{DB: db}
 	err = sql.FindScoreRecord(uint(userID), date)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		err = sql.InsertScore(uint(userID), score)
+		err = sql.InsertScore(uint(userID), float32(score))
 		if err != nil {
 			fmt.Println("UID ", userID, ": InsertScore err:", err)
 
@@ -40,7 +40,7 @@ func SubmitScore(c *gin.Context) {
 			"message": "评分提交成功",
 		})
 	} else {
-		err = sql.UpdateScore(uint(userID), score)
+		err = sql.UpdateScore(uint(userID), float32(score))
 		if err != nil {
 			fmt.Println("UID ", userID, ": UpdateScore err:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{

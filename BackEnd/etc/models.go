@@ -20,13 +20,14 @@ type Universe struct {
 	Ip        string   `gorm:"type:char" json:"ip"`
 	District  string   `gorm:"type:varchar" json:"district"`
 	City      string   `gorm:"type:varchar" json:"city"`
-	Latitude  float64  `gorm:"type:float" json:"latitude"`
-	Longitude float64  `gorm:"type:float" json:"longitude"`
+	Latitude  float32  `gorm:"type:float" json:"latitude"`
+	Longitude float32  `gorm:"type:float" json:"longitude"`
 	PeriodID  uint     `gorm:"type:int;" json:"period_id"`
 	Date      string   `gorm:"type:char;" json:"date"`
 	Count     uint     `gorm:"type:int;default:1" json:"count"`
 	Flow      uint     `gorm:"type:int;default:0" json:"flow"`
 	Latency   uint     `gorm:"type:int;default:0" json:"latency"`
+	ErrCount  uint     `gorm:"type:int;default:0" json:"err_count"`
 	User      Userinfo `gorm:"ForeignKey:UserID;references:ID"`
 }
 
@@ -38,9 +39,17 @@ type Interests struct {
 
 type Score struct {
 	UserID uint     `gorm:"primary_key" json:"user_id"`
-	Score  float64  `gorm:"type:float;default:0" json:"score"`
+	Score  float32  `gorm:"type:float;default:0" json:"score"`
 	Date   string   `gorm:"type:char;" json:"date"`
 	User   Userinfo `gorm:"ForeignKey:UserID;references:ID"`
+}
+
+type BaseStation struct {
+	ConnCount  int     `json:"connection_count"`
+	Time       string  `json:"time"`
+	TotalFlow  int     `json:"total_flow"`
+	AveLatency int     `json:"ave_latency"`
+	LossRate   float32 `json:"loss_rate"`
 }
 
 // Gorm的特殊方法，指定表名
@@ -65,9 +74,39 @@ func (sc *Score) TableName() string {
 	return "score"
 }
 
+func (bs *BaseStation) TableName() string { return "base_station" }
+
 // 查询每日平均分结构体
 
 type AverageScore struct {
 	Date    string  `json:"date"`
-	Average float64 `json:"average_score"`
+	Average float32 `json:"average_score"`
+}
+
+func ChooseTable(station_id uint, MODE string) string {
+	var tablename string
+	if MODE == "universe" {
+		switch station_id {
+		case 1:
+			tablename = "universe1"
+		case 2:
+			tablename = "universe2"
+		case 3:
+			tablename = "universe3"
+		case 4:
+			tablename = "universe4"
+		}
+	} else if MODE == "base_station" {
+		switch station_id {
+		case 1:
+			tablename = "base_station1"
+		case 2:
+			tablename = "base_station2"
+		case 3:
+			tablename = "base_station3"
+		case 4:
+			tablename = "base_station4"
+		}
+	}
+	return tablename
 }

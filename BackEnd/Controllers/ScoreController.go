@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-func (s *SqlController) InsertScore(userID uint, score float64) error {
+func (s *SqlController) InsertScore(userID uint, score float32) error {
 	var scoreData = etc.Score{UserID: userID, Score: score, Date: time.Now().Format(time.DateOnly)}
 	result := s.DB.Table("network_score").Create(&scoreData).Error
 	return result
 }
 
-func (s *SqlController) UpdateScore(userID uint, score float64) error {
+func (s *SqlController) UpdateScore(userID uint, score float32) error {
 	var scoreData = etc.Score{UserID: userID, Score: score, Date: time.Now().Format(time.DateOnly)}
 	result := s.DB.Table("network_score").Where("user_id = ?", userID).Updates(&scoreData).Error
 	return result
@@ -41,7 +41,7 @@ func (s *SqlController) AverageScoreByDate() ([]etc.AverageScore, error) {
 		if err != nil {
 			return []etc.AverageScore{}, err
 		}
-		aves = append(aves, etc.AverageScore{Date: date, Average: averageFloat})
+		aves = append(aves, etc.AverageScore{Date: date, Average: float32(averageFloat)})
 	}
 	return aves, nil
 }
