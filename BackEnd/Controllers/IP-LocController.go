@@ -2,7 +2,7 @@
 package Controllers
 
 import (
-	"UserPortrait/etc"
+	"UserPortrait/configs"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -50,7 +50,7 @@ func GetLocation(ip string) (LocInfo, error) {
 		errinfo := fmt.Errorf("err in GetLocation/NewRequest:%v", err)
 		return LocInfo{}, errinfo
 	}
-	req.Header.Add("X-APISpace-Token", etc.APISpaceKey)
+	req.Header.Add("X-APISpace-Token", configs.APISpaceKey)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

@@ -1,7 +1,7 @@
 package token
 
 import (
-	"UserPortrait/etc"
+	"UserPortrait/configs"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -11,15 +11,28 @@ import (
 	"time"
 )
 
-func GenerateToken(userId uint) (string, error) {
-	tokenLifespan := etc.TOKEN_LIFESPAN
+func GenerateUserToken(userId uint) (string, error) {
+	tokenLifespan := configs.TOKEN_LIFESPAN
 	claims := jwt.MapClaims{}
 	claims["authorized"] = true
 	claims["user_id"] = userId
+	claims["salt"] = configs.Salt
 	claims["exp"] = time.Now().Add(time.Hour * time.Duration(tokenLifespan)).Unix()
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	userToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return userToken.SignedString([]byte(configs.TOKEN_SECRET))
+}
 
-	return token.SignedString([]byte(etc.TOKEN_SECRET))
+//TODO:管理员token需要接口
+
+func GenerateAdminToken(adminId uint) (string, error) {
+	tokenLifespan := configs.TOKEN_LIFESPAN
+	claims := jwt.MapClaims{}
+	claims["authorized"] = true
+	claims["admin_id"] = adminId
+	claims["admin_salt"] = configs.AdminSalt
+	claims["exp"] = time.Now().Add(time.Hour * time.Duration(tokenLifespan)).Unix()
+	adminToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return adminToken.SignedString([]byte(configs.TOKEN_SECRET))
 }
 
 func TokenValid(c *gin.Context) error {
@@ -31,12 +44,17 @@ func TokenValid(c *gin.Context) error {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(etc.TOKEN_SECRET), nil
+		return []byte(configs.TOKEN_SECRET), nil
 	})
 	if err != nil {
 		return err
 	}
-	if !token.Valid {
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if claims["salt"] == configs.Salt && claims["authorized"] == true {
+			fmt.Printf("UID %v\n:Token Valid\n", claims["user_id"])
+			return nil
+		}
+	} else {
 		return errors.New("invalid token")
 	}
 	exp, ok := token.Claims.(jwt.MapClaims)["exp"].(float64)
@@ -66,7 +84,7 @@ func ExtractTokenID(c *gin.Context) (uint, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(etc.TOKEN_SECRET), nil
+		return []byte(configs.TOKEN_SECRET), nil
 	})
 	if err != nil {
 		return 0, err

@@ -9,4 +9,12 @@ var (
 
 var (
 	UniverseChannel = make(chan Universe, 100)
+	StationChannel  = make(chan BaseStation, 100)
+)
+
+var (
+	StationLocation1 = []float32{39.9042, 116.4074}
+	StationLocation2 = []float32{39.9042, 116.4074}
+	StationLocation3 = []float32{39.9042, 116.4074}
+	StationLocation4 = []float32{39.9042, 116.4074}
 )

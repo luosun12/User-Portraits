@@ -2,6 +2,7 @@ package service
 
 import (
 	"UserPortrait/Controllers"
+	"UserPortrait/configs"
 	"UserPortrait/etc"
 	"UserPortrait/service/database"
 	"UserPortrait/token"
@@ -113,9 +114,10 @@ func Login(c *gin.Context) {
 		}
 	} else {
 		if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(context.PostForm("password"))) == nil {
-			Token, errfortoken := token.GenerateToken(user.ID)
+			// 登录成功，返回生成的token
+			Token, errfortoken := token.GenerateUserToken(user.ID)
 			for errfortoken != nil {
-				Token, errfortoken = token.GenerateToken(user.ID)
+				Token, errfortoken = token.GenerateUserToken(user.ID)
 				fmt.Printf("login err:token generate failed,retrying\n")
 			}
 			context.JSON(http.StatusOK, gin.H{
@@ -148,7 +150,7 @@ func UploadAvatar(c *gin.Context) {
 	if imageType == "jpg" || imageType == "jpeg" || imageType == "png" {
 		userid := context.PostForm("user_id")
 		newfilename := fmt.Sprintf("%v.%v", userid, imageType)
-		dst := filepath.Join(etc.AvatarUploadPath, newfilename)
+		dst := filepath.Join(configs.AvatarUploadPath, newfilename)
 		if err := c.SaveUploadedFile(image, dst); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -162,7 +164,7 @@ func UploadAvatar(c *gin.Context) {
 // TODO: 用户基本信息获取
 func GetBasicInfo(c *gin.Context) {
 	context := c
-	userid := context.Param("id")
+	userid := context.Query("id")
 	fmt.Println(userid)
 	return
 }

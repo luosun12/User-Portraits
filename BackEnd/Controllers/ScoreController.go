@@ -24,24 +24,24 @@ func (s *SqlController) FindScoreRecord(userID uint, date string) error {
 	return result
 }
 
-func (s *SqlController) AverageScoreByDate() ([]etc.AverageScore, error) {
-	var aves []etc.AverageScore
+func (s *SqlController) AverageScoreByDate() ([]etc.AverageScoreInterface, error) {
+	var aves []etc.AverageScoreInterface
 	rows, err := s.DB.Table("network_score").Select("date as date,AVG(score) as average_score").Group("date").Rows()
 	if err != nil {
-		return []etc.AverageScore{}, err
+		return []etc.AverageScoreInterface{}, err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var date string
 		var average sql.RawBytes
 		if err = rows.Scan(&date, &average); err != nil {
-			return []etc.AverageScore{}, err
+			return []etc.AverageScoreInterface{}, err
 		}
 		averageFloat, err := strconv.ParseFloat(string(average), 64)
 		if err != nil {
-			return []etc.AverageScore{}, err
+			return []etc.AverageScoreInterface{}, err
 		}
-		aves = append(aves, etc.AverageScore{Date: date, Average: float32(averageFloat)})
+		aves = append(aves, etc.AverageScoreInterface{Date: date, Average: float32(averageFloat)})
 	}
 	return aves, nil
 }

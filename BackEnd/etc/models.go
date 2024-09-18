@@ -1,3 +1,7 @@
+/*
+定义gorm格式MySQL数据表信息、各json格式化的接口等结构体
+*/
+
 package etc
 
 type Userinfo struct {
@@ -6,6 +10,12 @@ type Userinfo struct {
 	Password string     `gorm:"type:varchar(255)" json:"password"`
 	MacInfo  string     `gorm:"type:varchar(32)" json:"mac_info"`
 	Users    []Universe `gorm:"ForeignKey:UserID"`
+}
+
+type Admininfo struct {
+	ID        uint   `gorm:"primary_key;auto_increment" json:"id"`
+	Adminname string `gorm:"type:varchar(16)" json:"adminname"`
+	Password  string `gorm:"type:varchar(255)" json:"password"`
 }
 
 type ContentType struct {
@@ -45,10 +55,12 @@ type Score struct {
 }
 
 type BaseStation struct {
-	ConnCount  int     `json:"connection_count"`
-	Time       string  `json:"time"`
-	TotalFlow  int     `json:"total_flow"`
-	AveLatency int     `json:"ave_latency"`
+	ConnCount  uint    `gorm:"default:1" json:"conn_count"`
+	ErrCount   uint    `gorm:"default:0" json:"err_count"`
+	Date       string  `json:"date"`
+	PeriodID   uint    `json:"period_id"`
+	TotalFlow  uint    `json:"total_flow"`
+	AveLatency uint    `json:"ave_latency"`
 	LossRate   float32 `json:"loss_rate"`
 }
 
@@ -57,6 +69,8 @@ type BaseStation struct {
 func (u *Userinfo) TableName() string {
 	return "user_info"
 }
+
+func (ad *Admininfo) TableName() string { return "admin_info" }
 
 func (ct *ContentType) TableName() string {
 	return "content_info"
@@ -78,35 +92,29 @@ func (bs *BaseStation) TableName() string { return "base_station" }
 
 // 查询每日平均分结构体
 
-type AverageScore struct {
+type AverageScoreInterface struct {
 	Date    string  `json:"date"`
 	Average float32 `json:"average_score"`
 }
 
-func ChooseTable(station_id uint, MODE string) string {
-	var tablename string
-	if MODE == "universe" {
-		switch station_id {
-		case 1:
-			tablename = "universe1"
-		case 2:
-			tablename = "universe2"
-		case 3:
-			tablename = "universe3"
-		case 4:
-			tablename = "universe4"
-		}
-	} else if MODE == "base_station" {
-		switch station_id {
-		case 1:
-			tablename = "base_station1"
-		case 2:
-			tablename = "base_station2"
-		case 3:
-			tablename = "base_station3"
-		case 4:
-			tablename = "base_station4"
-		}
-	}
-	return tablename
+// 获取基站区域信息
+
+type StationInterface struct {
+	StationInfo struct {
+		StationID uint    `json:"station_id"`
+		Latitute  float32 `json:"latitute"`
+		Longitude float32 `json:"longitude"`
+	} `json:"station_info"`
+	Status []StatusInfo `json:"status"`
+}
+
+type StatusInfo struct {
+	Date string `json:"date"`
+	Info []struct {
+		PeriodID        uint    `json:"time_id"`
+		ConnCount       uint    `json:"conn_quantity"`
+		AverageSpeed    float32 `json:"average_speed"`
+		AverageLatency  uint    `json:"average_latency"`
+		AverageLossRate float32 `json:"average_packet_loss_rate"`
+	} `json:"info"`
 }

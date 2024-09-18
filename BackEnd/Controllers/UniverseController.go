@@ -8,16 +8,16 @@ import (
 	"sync"
 )
 
-var mutex sync.Mutex
+var uniMutex sync.Mutex
 
 // 插入新universe记录
 func (s *SqlController) InsertUniverse(TableName string) (err error) {
-	mutex.Lock()
-	defer mutex.Unlock()
+	uniMutex.Lock()
+	defer uniMutex.Unlock()
 	return s.DB.Transaction(func(tx *gorm.DB) error {
 		if newuni, ok := <-etc.UniverseChannel; ok {
 			// 首先更新位置信息
-			newuni.District, newuni.City, newuni.Longitude, newuni.Latitude, err = s.UpdateLocationInfo(newuni.Ip)
+			newuni.District, newuni.City, newuni.Longitude, newuni.Latitude, err = s.TransferLocationInfo(newuni.Ip)
 			if err != nil {
 				return fmt.Errorf("UID%v: update universe failed:%v\n", newuni.UserID, err)
 			}
@@ -39,8 +39,8 @@ func (s *SqlController) InsertUniverse(TableName string) (err error) {
 
 // 满足时空相同条件的universe更新
 func (s *SqlController) UpdateUniverse(TableName string) (err error) {
-	mutex.Lock()
-	defer mutex.Unlock()
+	uniMutex.Lock()
+	defer uniMutex.Unlock()
 	return s.DB.Transaction(func(tx *gorm.DB) error {
 		if uni, ok := <-etc.UniverseChannel; ok {
 			err = tx.Table(TableName).Where("user_id = ?", uni.UserID).Updates(map[string]interface{}{
@@ -63,7 +63,7 @@ func (s *SqlController) UpdateUniverse(TableName string) (err error) {
 }
 
 // 根据IP更新位置信息
-func (s *SqlController) UpdateLocationInfo(ip string) (string, string, float32, float32, error) {
+func (s *SqlController) TransferLocationInfo(ip string) (string, string, float32, float32, error) {
 	locinfo, err := GetLocation(ip)
 	if err != nil {
 		return "", "", 0, 0, fmt.Errorf("Get location failed %v\n", err)

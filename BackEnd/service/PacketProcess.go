@@ -7,14 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
-	"strconv"
 )
 
 // 根据解包脚本更新universe信息，保证流时、空时分布的核心
 // 需别处增加判定station_id的部分
 
-func Packet2Universe(station_id uint, loss_flag bool, MAC string, IP string, datetime string, flow uint, latency uint) (err error) {
-	tablename := etc.ChooseTable(station_id, "universe")
+func Packet2Universe(stationId uint, lossFlag bool, MAC string, IP string, datetime string, flow uint, latency uint) (err error) {
+	universeTable := etc.ChooseTable(stationId, "universe")
 	db, err := database.InitDB()
 	if err != nil {
 		return err
@@ -47,18 +46,18 @@ func Packet2Universe(station_id uint, loss_flag bool, MAC string, IP string, dat
 		ID = user.ID
 	}
 	// 分解时段信息
-	date, periodID, err := GetPeriod(datetime)
+	date, periodID, err := etc.GetPeriod(datetime)
 	if err != nil {
 		return err
 	}
 
-	FoundUniverse := db.Table(tablename).Where("user_id =? AND ip =? AND date =? AND period_id =?", ID, IP, date, periodID).Take(&uni)
+	FoundUniverse := db.Table(universeTable).Where("user_id =? AND ip =? AND date =? AND period_id =?", ID, IP, date, periodID).Take(&uni)
 	if FoundUniverse.Error != nil {
 		if errors.Is(FoundUniverse.Error, gorm.ErrRecordNotFound) {
 			newuni = etc.Universe{UserID: ID, Ip: IP, Date: date, Flow: flow, Latency: latency, PeriodID: periodID}
 			etc.UniverseChannel <- newuni
 			// 若该记录不存在，则创建记录
-			if err = sql.InsertUniverse(tablename); err != nil {
+			if err = sql.InsertUniverse(universeTable); err != nil {
 				return err
 			}
 		} else {
@@ -68,33 +67,41 @@ func Packet2Universe(station_id uint, loss_flag bool, MAC string, IP string, dat
 		// 若该记录存在，即时间段与IP均重复，则累加flow，取latency平均；若LossFlag为true，则err_count+1
 		err_count := uni.ErrCount
 		flow += uni.Flow
-		if loss_flag {
+		if lossFlag {
 			err_count += 1
 			newuni = etc.Universe{UserID: uni.UserID, Ip: IP, Date: date, Flow: flow, Latency: uni.Latency, PeriodID: periodID, Count: uni.Count + 1, ErrCount: err_count}
 		} else {
-			latency = (uni.Latency + latency) / 2
+			latency = (uni.Latency*uni.Count + latency) / (uni.Count + 1)
 			newuni = etc.Universe{UserID: uni.UserID, Ip: IP, Date: date, Flow: flow, Latency: latency, PeriodID: periodID, Count: uni.Count + 1, ErrCount: uni.ErrCount}
 		}
-
 		etc.UniverseChannel <- newuni
-		if err := sql.UpdateUniverse(tablename); err != nil {
+		if err := sql.UpdateUniverse(universeTable); err != nil {
 			return err
 		}
+
 	}
 	return nil
 }
 
-//获取日期和时段编码
+// 在Universe更改后执行，更新基站记录
 
-func GetPeriod(t string) (string, uint, error) {
-
-	if t == "" {
-		return "", 0, fmt.Errorf("time is empty")
+func Packer2BaseStation(stationId uint, lossFlag bool, datetime string, flow uint, latency uint) error {
+	stationTable := etc.ChooseTable(stationId, "base_station")
+	db, err := database.InitDB()
+	if err != nil {
+		return err
 	}
-	var hour = t[11:13]
-	var periodId, _ = strconv.ParseUint(hour, 10, 64)
-	if periodId >= 24 || periodId < 0 {
-		return "", 0, fmt.Errorf("time is out of range")
+	var sql = Controllers.SqlController{DB: db}
+	date, periodID, err := etc.GetPeriod(datetime)
+	if err != nil {
+		fmt.Println(err)
+		return err
 	}
-	return t[0:10], uint(periodId) + 1, nil
+	var newrecord = etc.BaseStation{Date: date, PeriodID: periodID, TotalFlow: flow, AveLatency: latency}
+	if lossFlag {
+		newrecord.ErrCount = 1
+	}
+	etc.StationChannel <- newrecord
+	err = sql.UpdateStationAfterUni(stationTable)
+	return err
 }

@@ -1,20 +1,29 @@
 package main
 
 import (
+	"UserPortrait/configs"
 	"UserPortrait/middleware"
 	"UserPortrait/service"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func InitRouter() *gin.Engine {
 	r := gin.Default()
+	CORS := cors.Config{
+		AllowOrigins: []string{
+			configs.CORS_ORIGIN,
+		},
+	}
+	r.Use(cors.New(CORS))
 	public := r.Group("/public")
 	{
 		public.GET("/ping", service.Ping)
 		public.POST("/register", service.Register)
 		public.POST("/login", service.Login)
-		public.GET("/getbasicinfo/:id", service.GetBasicInfo)
+		public.GET("/getbasicinfo", service.GetBasicInfo)
+		public.GET("/getstationinfo", service.GetBaseStationInfo)
 	}
 	private := r.Group("")
 	{
