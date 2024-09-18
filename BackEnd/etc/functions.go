@@ -59,11 +59,12 @@ func GetPeriod(t string) (string, uint, error) {
 		return "", 0, fmt.Errorf("time is empty")
 	}
 	var hour = t[11:13]
-	var periodId, _ = strconv.ParseUint(hour, 10, 64)
-	if periodId > 24 || periodId < 0 {
+	var Id, _ = strconv.ParseUint(hour, 10, 64)
+	periodId := uint(Id) + 1
+	if periodId > 24 || periodId < 1 {
 		return "", 0, fmt.Errorf("time is out of range")
 	}
-	return t[0:10], uint(periodId) + 1, nil
+	return t[0:10], periodId, nil
 }
 
 // 获取当前近二十四小时时段信息,查询时满足：1.lastDate的lastId~24；2.currDate的1~currId

@@ -52,29 +52,26 @@ func (s *SqlController) DailyStationRecords(stationId uint, TableName string, ye
 	var lastRecords []etc.BaseStation
 	var currRecords []etc.BaseStation
 	// 实例初始化
-	var entity = etc.StationInterface{
-		Status: make([]etc.StatusInfo, 2),
-	}
+	var entity etc.StationInterface
 	// 更新实例的静态信息
 	entity.StationInfo.StationID = stationId
 	entity.StationInfo.Latitute, entity.StationInfo.Longitude = etc.ChooseStationLoc(stationId)
-	entity.Status[0].Date = yesterday
-	entity.Status[1].Date = today
+	entity.CurrentPeriod = currID
 
 	// 数据库条件遍历，获取昨日、今日近24小时记录
-	Contents := s.DB.Table(TableName).Select("*")
-	err := Contents.Where("date =? AND period_id >=? AND period_id <=?", yesterday, lastID, 24).Order("period_id").Find(&lastRecords).Error
-	if err != nil {
-		return entity, err
+	Contents1 := s.DB.Table(TableName).Select("*")
+	Contents2 := s.DB.Table(TableName).Select("*")
+	err1 := Contents1.Where("date =? AND period_id >=? AND period_id <=?", yesterday, int(lastID), 24).Order("period_id").Find(&lastRecords).Error
+	if err1 != nil {
+		return entity, err1
 	}
-	err = Contents.Where("date =? AND period_id >=? AND period_id <=?", today, 1, currID).Order("period_id").Find(&currRecords).Error
-	if err != nil {
-		return entity, err
+	err2 := Contents2.Where("date =? AND period_id >=? AND period_id <=?", today, 1, int(currID)).Order("period_id").Find(&currRecords).Error
+	if err2 != nil {
+		return entity, err2
 	}
-	// TODO:目前问题是currRecords命名有相应记录，但不论如何都为空
-	fmt.Println("Current Records Count:", len(currRecords))
-	for _, record1 := range lastRecords {
-		entity.Status[0].Info = append(entity.Status[0].Info, struct {
+
+	for _, record1 := range currRecords {
+		entity.Status = append(entity.Status, struct {
 			PeriodID        uint    `json:"time_id"`
 			ConnCount       uint    `json:"conn_quantity"`
 			AverageSpeed    float32 `json:"average_speed"`
@@ -89,9 +86,8 @@ func (s *SqlController) DailyStationRecords(stationId uint, TableName string, ye
 			AverageLossRate: record1.LossRate,
 		})
 	}
-	for _, record2 := range currRecords {
-		fmt.Println("curr:", record2.PeriodID)
-		entity.Status[1].Info = append(entity.Status[1].Info, struct {
+	for _, record2 := range lastRecords {
+		entity.Status = append(entity.Status, struct {
 			PeriodID        uint    `json:"time_id"`
 			ConnCount       uint    `json:"conn_quantity"`
 			AverageSpeed    float32 `json:"average_speed"`
@@ -101,7 +97,7 @@ func (s *SqlController) DailyStationRecords(stationId uint, TableName string, ye
 			PeriodID:  record2.PeriodID,
 			ConnCount: record2.ConnCount,
 			// TODO: 确定流量与延时的单位
-			AverageSpeed:    float32(record2.TotalFlow * 1.0 / record2.AveLatency * 1000.0),
+			AverageSpeed:    float32(record2.TotalFlow * 1.0 / record2.AveLatency),
 			AverageLatency:  record2.AveLatency,
 			AverageLossRate: record2.LossRate,
 		})

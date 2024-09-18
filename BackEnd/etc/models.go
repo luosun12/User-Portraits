@@ -100,21 +100,17 @@ type AverageScoreInterface struct {
 // 获取基站区域信息
 
 type StationInterface struct {
-	StationInfo struct {
+	CurrentPeriod uint `json:"current_period_id"`
+	StationInfo   struct {
 		StationID uint    `json:"station_id"`
 		Latitute  float32 `json:"latitute"`
 		Longitude float32 `json:"longitude"`
 	} `json:"station_info"`
-	Status []StatusInfo `json:"status"`
-}
-
-type StatusInfo struct {
-	Date string `json:"date"`
-	Info []struct {
+	Status []struct {
 		PeriodID        uint    `json:"time_id"`
 		ConnCount       uint    `json:"conn_quantity"`
 		AverageSpeed    float32 `json:"average_speed"`
 		AverageLatency  uint    `json:"average_latency"`
 		AverageLossRate float32 `json:"average_packet_loss_rate"`
-	} `json:"info"`
+	} `json:"status"`
 }
