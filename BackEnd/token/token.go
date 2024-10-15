@@ -35,7 +35,7 @@ func GenerateAdminToken(adminId uint) (string, error) {
 	return adminToken.SignedString([]byte(configs.TOKEN_SECRET))
 }
 
-func TokenValid(c *gin.Context) error {
+func UserTokenValid(c *gin.Context) error {
 	tokenString := ExtractToken(c)
 	if tokenString == "" {
 		return fmt.Errorf("token is missing")
@@ -52,6 +52,38 @@ func TokenValid(c *gin.Context) error {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		if claims["salt"] == configs.Salt && claims["authorized"] == true {
 			fmt.Printf("UID %v\n:Token Valid\n", claims["user_id"])
+			return nil
+		}
+	} else {
+		return errors.New("invalid token")
+	}
+	exp, ok := token.Claims.(jwt.MapClaims)["exp"].(float64)
+	if !ok {
+		return errors.New("invalid exp claim")
+	}
+	if time.Now().Unix() > int64(exp) {
+		return errors.New("token has expired")
+	}
+	return nil
+}
+
+func AdminTokenValid(c *gin.Context) error {
+	tokenString := ExtractToken(c)
+	if tokenString == "" {
+		return fmt.Errorf("token is missing")
+	}
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(configs.TOKEN_SECRET), nil
+	})
+	if err != nil {
+		return err
+	}
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if claims["admin_salt"] == configs.AdminSalt && claims["authorized"] == true {
+			fmt.Printf("AdminID %v\n:Token Valid\n", claims["admin_id"])
 			return nil
 		}
 	} else {
