@@ -10,18 +10,14 @@ func (s *SqlController) FindAdminByName(name string) (etc.Admininfo, error) {
 	return admin, err
 }
 
-func (s *SqlController) InsertAdmin(admin etc.Admininfo) {
+func (s *SqlController) InsertAdmin(admin etc.Admininfo) error {
 	err := s.DB.Table("admin_info").Create(&admin).Error
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
 
-func (s *SqlController) UpdateAdminByID(id uint, name string, pswd string) {
+func (s *SqlController) UpdateAdminByID(id uint, name string, pswd string) error {
 
 	err := s.DB.Table("admin_info").Where("id = ?", id).Updates(map[string]interface{}{
 		"adminname": name, "password": pswd}).Error
-	if err != nil {
-		panic(err)
-	}
+	return err
 }

@@ -21,6 +21,7 @@ func GetBaseStationInfo(c *gin.Context) {
 		return
 	}
 	stationId, _ := strconv.ParseUint(c.Query("station_id"), 10, 32)
+	//fmt.Printf("Query Num Type:%T,%T", stationId, c.Query("station_id"))
 	TableName := etc.ChooseTable(uint(stationId), "base_station")
 	sql := Controllers.SqlController{DB: db}
 	Yesterday, Today, lastPeriodId, currPeriodId, err := etc.GetDailyInfo()

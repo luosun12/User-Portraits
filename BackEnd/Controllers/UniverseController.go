@@ -4,7 +4,6 @@ import (
 	"UserPortrait/etc"
 	"fmt"
 	"gorm.io/gorm"
-	"strconv"
 	"sync"
 )
 
@@ -68,7 +67,7 @@ func (s *SqlController) TransferLocationInfo(ip string) (string, string, float32
 	if err != nil {
 		return "", "", 0, 0, fmt.Errorf("Get location failed %v\n", err)
 	}
-	lat, _ := strconv.ParseFloat(locinfo.Data.Lat, 32)
-	lng, _ := strconv.ParseFloat(locinfo.Data.Lng, 32)
-	return locinfo.Data.District, locinfo.Data.City, float32(lat), float32(lng), nil
+	roundLat := etc.RoundToFloat32(locinfo.Result.Location.Lat, 4)
+	roundLng := etc.RoundToFloat32(locinfo.Result.Location.Lng, 4)
+	return locinfo.Result.AdInfo.District, locinfo.Result.AdInfo.City, roundLat, roundLng, nil
 }

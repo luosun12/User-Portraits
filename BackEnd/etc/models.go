@@ -1,8 +1,8 @@
-/*
-定义gorm格式MySQL数据表信息、各json格式化的接口等结构体
-*/
+/*定义gorm格式MySQL数据表信息、各json格式化的接口等结构体*/
 
 package etc
+
+//***************数据库表结构***************//
 
 type Userinfo struct {
 	ID       uint       `gorm:"primary_key;auto_increment" json:"id"`
@@ -32,12 +32,12 @@ type Universe struct {
 	City      string   `gorm:"type:varchar" json:"city"`
 	Latitude  float32  `gorm:"type:float" json:"latitude"`
 	Longitude float32  `gorm:"type:float" json:"longitude"`
-	PeriodID  uint     `gorm:"type:int;" json:"period_id"`
+	PeriodID  uint     `json:"period_id"`
 	Date      string   `gorm:"type:char;" json:"date"`
-	Count     uint     `gorm:"type:int;default:1" json:"count"`
-	Flow      uint     `gorm:"type:int;default:0" json:"flow"`
-	Latency   uint     `gorm:"type:int;default:0" json:"latency"`
-	ErrCount  uint     `gorm:"type:int;default:0" json:"err_count"`
+	Count     uint     `gorm:"default:1" json:"count"`
+	Flow      uint     `gorm:"default:0" json:"flow"`
+	Latency   uint     `gorm:"default:0" json:"latency"`
+	ErrCount  uint     `gorm:"default:0" json:"err_count"`
 	User      Userinfo `gorm:"ForeignKey:UserID;references:ID"`
 }
 
@@ -64,32 +64,31 @@ type BaseStation struct {
 	LossRate   float32 `json:"loss_rate"`
 }
 
+type UserNetStatus struct {
+	UserID      uint    `gorm:"primary_key" json:"user_id"`
+	Latency     uint    `gorm:"default:0" json:"latency"`
+	Speed       float32 `gorm:"default:0" json:"speed"`
+	PacketLoss  float32 `gorm:"default:0" json:"packet_loss"`
+	HourlyScore float32 `json:"hourly_score"`
+}
+
 // Gorm的特殊方法，指定表名
 
-func (u *Userinfo) TableName() string {
-	return "user_info"
-}
+func (u *Userinfo) TableName() string { return "user_info" }
 
 func (ad *Admininfo) TableName() string { return "admin_info" }
 
-func (ct *ContentType) TableName() string {
-	return "content_info"
-}
+func (ct *ContentType) TableName() string { return "content_info" }
 
-func (uni *Universe) TableName() string {
-	return "universe"
-}
+func (uni *Universe) TableName() string { return "universe" }
 
-func (itr *Interests) TableName() string {
-	return "content2user"
-}
+func (itr *Interests) TableName() string { return "content2user" }
 
-func (sc *Score) TableName() string {
-	return "score"
-}
+func (sc *Score) TableName() string { return "score" }
 
 func (bs *BaseStation) TableName() string { return "base_station" }
 
+//***************接口用json结构体***************//
 // 查询每日平均分结构体
 
 type AverageScoreInterface struct {
@@ -113,4 +112,19 @@ type StationInterface struct {
 		AverageLatency  uint    `json:"average_latency"`
 		AverageLossRate float32 `json:"average_packet_loss_rate"`
 	} `json:"status"`
+}
+
+// 用户获取近24时流量数据
+
+type TrafficData struct {
+	Traffic [24]uint `json:"traffic"`
+}
+
+// 用户获取常去地点统计
+
+type FreqLocation struct {
+	City  string  `json:"name"`
+	Count uint    `json:"count"`
+	Lat   float32 `json:"lat"`
+	Lng   float32 `json:"lng"`
 }

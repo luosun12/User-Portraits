@@ -1,7 +1,9 @@
 package etc
 
 import (
+	"crypto/md5"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 )
@@ -83,4 +85,19 @@ func GetDailyInfo() (string, string, uint, uint, error) {
 		lastId = currId + 1
 	}
 	return lastDate, currDate, lastId, currId, nil
+}
+
+// 保留部分小数位，并不改变类型
+
+func RoundToFloat32(f float64, n int) float32 {
+	power := math.Pow(10, float64(n))
+	return float32(math.Floor(f*power+0.5) / power) // 加0.5后取整，模拟四舍五入
+}
+
+// 获取md5编码哈希
+
+func GetMD5Hash(input string) string {
+	h := md5.New()
+	h.Write([]byte(input))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }

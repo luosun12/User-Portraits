@@ -19,24 +19,32 @@ func InitRouter() *gin.Engine {
 	r.Use(cors.New(CORS))
 	public := r.Group("/public")
 	{
-		public.GET("/ping", service.Ping)
 		public.POST("/register", service.Register)
 		public.POST("/login", service.Login)
-		public.GET("/getbasicinfo", service.GetBasicInfo)
-		public.GET("/getstationinfo", service.GetBaseStationInfo)
+		public.GET("/getUserBasicInfo", service.GetUserBasicInfo)
+
+		public.POST("/admin_register", service.AdminRegister)
+		public.POST("/admin_login", service.AdminLogin)
 	}
 	private := r.Group("")
 	{
-		// 使用gin自定义中间件
-		private.Use(middleware.JwtAuthentication())
+		// TODO:主页面请求内容，暂用Ping替代
 		private.GET("/main", service.Ping)
 
-		up := private.Group("/upload")
-		up.POST("/avatar", service.UploadAvatar)
-		up.POST("/score", service.SubmitScore)
+		us := private.Group("/user")
+		us.Use(middleware.UserJwtAuthentication())
+		us.POST("/avatar", service.UploadAvatar)
+		us.POST("/score", service.SubmitScore)
+		us.POST("/reset_password", service.ResetPassword)
+		us.GET("/getDailyFlow", service.GetUserDailyFlow)
+		us.GET("/getFrequentPlaces", service.GetFreqLocation)
 
 		sc := private.Group("/score")
 		sc.GET("/average_score", service.GetAverageScore)
+
+		ad := private.Group("/admin")
+		ad.Use(middleware.AdminJwtAuthentication())
+		ad.GET("/getStationInfo", service.GetBaseStationInfo)
 	}
 	return r
 }

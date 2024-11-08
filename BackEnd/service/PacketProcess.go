@@ -85,7 +85,7 @@ func Packet2Universe(stationId uint, lossFlag bool, MAC string, IP string, datet
 
 // 在Universe更改后执行，更新基站记录
 
-func Packer2BaseStation(stationId uint, lossFlag bool, datetime string, flow uint, latency uint) error {
+func Packet2BaseStation(stationId uint, lossFlag bool, datetime string, flow uint, latency uint) error {
 	stationTable := etc.ChooseTable(stationId, "base_station")
 	db, err := database.InitDB()
 	if err != nil {

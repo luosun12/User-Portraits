@@ -10,7 +10,7 @@ import (
 
 var stationMutex sync.Mutex
 
-// 在Universe之后更新相应基站记录
+// UpdateStationAfterUni 在Universe之后更新相应基站记录
 func (s *SqlController) UpdateStationAfterUni(TableName string) error {
 	stationMutex.Lock()
 	defer stationMutex.Unlock()
@@ -48,6 +48,7 @@ func (s *SqlController) FindStationRecordByTime(TableName string, date string, p
 	return record, FoundRecord.Error
 }
 
+// DailyStationRecords 管理员用：获取指定基站的近24小时性能数据
 func (s *SqlController) DailyStationRecords(stationId uint, TableName string, yesterday string, today string, lastID uint, currID uint) (etc.StationInterface, error) {
 	var lastRecords []etc.BaseStation
 	var currRecords []etc.BaseStation

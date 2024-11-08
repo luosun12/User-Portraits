@@ -3,6 +3,7 @@ package Controllers
 
 import (
 	"UserPortrait/configs"
+	"UserPortrait/etc"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,48 +11,42 @@ import (
 	"strings"
 )
 
-// 定义结构体，作为位置信息的接收器
+// LocInfo 位置信息结构体
 type LocInfo struct {
-	Code string `json:"code"`
-	Data struct {
-		Continent string `json:"continent"`
-		Country   string `json:"country"`
-		Zipcode   string `json:"zipcode"`
-		Timezone  string `json:"timezone"`
-		Accuracy  string `json:"accuracy"`
-		Owner     string `json:"owner"`
-		Isp       string `json:"isp"`
-		Source    string `json:"source"`
-		Areacode  string `json:"areacode"`
-		Adcode    string `json:"adcode"`
-		Asnumber  string `json:"asnumber"`
-		Lat       string `json:"lat"`
-		Lng       string `json:"lng"`
-		Radius    string `json:"radius"`
-		Prov      string `json:"prov"`
-		City      string `json:"city"`
-		District  string `json:"district"`
-	} `json:"data"`
-	Charge   bool   `json:"charge"`
-	Msg      string `json:"msg"`
-	Ip       string `json:"ip"`
-	Coordsys string `json:"coordsys"`
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+	Result  struct {
+		Ip       string `json:"ip"`
+		Location struct {
+			Lat float64 `json:"lat"`
+			Lng float64 `json:"lng"`
+		} `json:"location"`
+		AdInfo struct {
+			Nation     string `json:"nation"`
+			NationCode int    `json:"nation_code"`
+			Province   string `json:"province"`
+			City       string `json:"city"`
+			District   string `json:"district"`
+			Adcode     int    `json:"adcode"`
+		} `json:"ad_info"`
+	} `json:"result"`
 }
 
-// 调用IP2Location API获取位置信息
+// GetLocation 调用腾讯地图API获取IP地址的位置信息
 func GetLocation(ip string) (LocInfo, error) {
-	url := "https://eolink.o.apispace.com/ipguishu/ip/geo/v1/district?ip=" + ip
+	url := fmt.Sprintf("/ws/location/v1/ip?ip=%s&key=%s", ip, configs.TencentMapKey)
+	sig := etc.GetMD5Hash(url + configs.TencentSK)
+	requestURL := fmt.Sprintf("https://apis.map.qq.com%s&sig=%s", url, sig)
 	method := "GET"
 
 	payload := strings.NewReader("")
-	req, err := http.NewRequest(method, url, payload)
+	req, err := http.NewRequest(method, requestURL, payload)
 
 	if err != nil {
 		errinfo := fmt.Errorf("err in GetLocation/NewRequest:%v", err)
 		return LocInfo{}, errinfo
 	}
-	req.Header.Add("X-APISpace-Token", configs.APISpaceKey)
-
+	req.Header.Add("Content-Type", "application/json")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		errinfo := fmt.Errorf("err in GetLocation/client:%v", err)
