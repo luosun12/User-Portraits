@@ -1,11 +1,12 @@
 module UserPortrait
 
-go 1.22
+go 1.22.5
 
 require (
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/google/gopacket v1.1.19
 	golang.org/x/crypto v0.26.0
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.11

@@ -19,7 +19,7 @@ func AdminRegister(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "数据库连接失败,请重试",
 		})
-		fmt.Printf("register err:%v\n", err)
+		fmt.Printf("%v:%v\n", etc.RegisterErr, err)
 		return
 	}
 	var sql = Controllers.SqlController{DB: db}
@@ -31,14 +31,14 @@ func AdminRegister(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "用户名不能为空",
 		})
-		fmt.Printf("register err:Empty Admin Name\n")
+		fmt.Println(etc.RegisterErr + "Empty Admin Name")
 		return
 	}
 	if newPswd == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "密码不能为空",
 		})
-		fmt.Printf("register err:Empty Password\n")
+		fmt.Println(etc.RegisterErr + "Empty Admin Password")
 		return
 	}
 
@@ -50,7 +50,7 @@ func AdminRegister(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "注册失败,请重试",
 		})
-		fmt.Printf("register err:%v\n", err)
+		fmt.Printf("%v:%v\n\n", etc.RegisterErr, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -65,7 +65,7 @@ func AdminLogin(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "数据库连接失败,请重试",
 		})
-		fmt.Printf("login err:%v\n", err)
+		fmt.Printf("%v:%v\n", etc.LoginErr, err)
 		return
 	}
 	var sql = Controllers.SqlController{DB: db}
@@ -76,14 +76,14 @@ func AdminLogin(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "用户名不能为空",
 		})
-		fmt.Printf("login err:Empty Admin Name\n")
+		fmt.Println(etc.LoginErr + "Empty Admin Name")
 		return
 	}
 	if adminPswd == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "密码不能为空",
 		})
-		fmt.Printf("login err:Empty Password\n")
+		fmt.Printf(etc.LoginErr + "Empty Password\n")
 		return
 	}
 	admin.Adminname = adminName
@@ -94,20 +94,20 @@ func AdminLogin(c *gin.Context) {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"message": "用户名或密码错误",
 			})
-			fmt.Printf("login err:%v\n", err)
+			fmt.Printf("%v:%v\n", etc.LoginErr, err)
 			return
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "服务器内部错误",
 			})
-			fmt.Printf("login err:%v\n", err)
+			fmt.Printf("%v:%v\n", etc.LoginErr, err)
 		}
 	}
 	if bcrypt.CompareHashAndPassword([]byte(result.Password), []byte(admin.Password)) != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "用户名或密码错误",
 		})
-		fmt.Printf("login err:Password Error\n")
+		fmt.Println(etc.LoginErr + "Password Error")
 		return
 	}
 	geneToken, errt := token.GenerateAdminToken(result.ID)
@@ -115,7 +115,7 @@ func AdminLogin(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "服务器内部错误",
 		})
-		fmt.Printf("login err:%v\n", errt)
+		fmt.Printf("%v:%v\n", etc.LoginErr, errt)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{

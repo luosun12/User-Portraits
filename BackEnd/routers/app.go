@@ -3,10 +3,15 @@ package main
 import (
 	"UserPortrait/configs"
 	"UserPortrait/middleware"
+	"UserPortrait/parsePacket/capture"
+	"UserPortrait/parsePacket/process"
 	"UserPortrait/service"
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func InitRouter() *gin.Engine {
@@ -50,10 +55,19 @@ func InitRouter() *gin.Engine {
 }
 
 func main() {
-	r := InitRouter()
-	err := r.Run("localhost:5000")
-	if err != nil {
-		err := fmt.Errorf("failed to run server: %v", err)
-		panic(err)
-	}
+	go func() {
+		r := InitRouter()
+		err := r.Run("localhost:5000")
+		if err != nil {
+			err := fmt.Errorf("failed to run server: %v", err)
+			panic(err)
+		}
+	}()
+	go process.CapturePackets()
+	go capture.Tcpd()
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	<-sigChan
+	fmt.Println("收到退出信号，程序退出...")
 }

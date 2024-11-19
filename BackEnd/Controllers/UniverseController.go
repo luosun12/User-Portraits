@@ -33,7 +33,6 @@ func (s *SqlController) InsertUniverse(TableName string) (err error) {
 			return fmt.Errorf("update universe failed:UniverseChannel error")
 		}
 	})
-
 }
 
 // 满足时空相同条件的universe更新
@@ -42,7 +41,7 @@ func (s *SqlController) UpdateUniverse(TableName string) (err error) {
 	defer uniMutex.Unlock()
 	return s.DB.Transaction(func(tx *gorm.DB) error {
 		if uni, ok := <-etc.UniverseChannel; ok {
-			err = tx.Table(TableName).Where("user_id = ?", uni.UserID).Updates(map[string]interface{}{
+			err = tx.Table(TableName).Where("period_id = ? AND ip = ? AND date = ?", uni.PeriodID, uni.Ip, uni.Date).Updates(map[string]interface{}{
 				"flow":      uni.Flow,
 				"latency":   uni.Latency,
 				"count":     uni.Count,

@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"math"
+	"net"
 	"strconv"
 	"time"
 )
@@ -100,4 +101,39 @@ func GetMD5Hash(input string) string {
 	h := md5.New()
 	h.Write([]byte(input))
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+// 获取本机的WLAN IP
+
+func GetLocalIP() string {
+	// 获取所有网络接口
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		fmt.Println("Error retrieving network interfaces:", err)
+		return ""
+	}
+
+	for _, iface := range interfaces {
+		// 仅处理活动的接口
+		if iface.Flags&net.FlagUp != 0 && iface.Flags&net.FlagLoopback == 0 {
+			addrs, err := iface.Addrs()
+			if err != nil {
+				fmt.Println("Error retrieving addresses:", err)
+				continue
+			}
+
+			for _, addr := range addrs {
+				// 过滤出 IPv4 地址
+				if ipNet, ok := addr.(*net.IPNet); ok && ipNet.IP.To4() != nil {
+					// 判断是否为 WLAN 接口
+					if iface.Name == "WLAN" { // 根据你的操作系统修改接口名称
+						fmt.Println("WLAN IP Address:", ipNet.IP.String())
+						return ipNet.IP.String()
+					}
+				}
+			}
+		}
+	}
+	fmt.Println("No WLAN IP address found.")
+	return ""
 }
