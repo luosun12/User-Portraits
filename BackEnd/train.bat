@@ -1,0 +1,6 @@
+@echo off
+echo Starting Model Training...
+powershell -ExecutionPolicy Bypass -File "%~dp0train.ps1"
+echo.
+echo Press any key to quit...
+pause > nul 

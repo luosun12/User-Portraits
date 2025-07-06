@@ -1,11 +1,13 @@
-package etc
+package functions
 
 import (
+	"UserPortrait/etc"
 	"crypto/md5"
 	"fmt"
 	"math"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -42,13 +44,13 @@ func ChooseTable(station_id uint, MODE string) string {
 func ChooseStationLoc(station_id uint) (float32, float32) {
 	switch station_id {
 	case 1:
-		return StationLocation1[0], StationLocation1[1]
+		return etc.StationLocation1[0], etc.StationLocation1[1]
 	case 2:
-		return StationLocation2[0], StationLocation2[1]
+		return etc.StationLocation2[0], etc.StationLocation2[1]
 	case 3:
-		return StationLocation3[0], StationLocation3[1]
+		return etc.StationLocation3[0], etc.StationLocation3[1]
 	case 4:
-		return StationLocation4[0], StationLocation4[1]
+		return etc.StationLocation4[0], etc.StationLocation4[1]
 	default:
 		return 0, 0
 	}
@@ -136,4 +138,23 @@ func GetLocalIP() string {
 	}
 	fmt.Println("No WLAN IP address found.")
 	return ""
+}
+
+type ContentType string
+
+func classifyContentType(contentType string) ContentType {
+	switch {
+	case strings.HasPrefix(contentType, "text/"):
+		return "Text"
+	case strings.HasPrefix(contentType, "image/"):
+		return "Image"
+	case strings.HasPrefix(contentType, "audio/"):
+		return "Audio"
+	case strings.HasPrefix(contentType, "video/"):
+		return "Video"
+	case strings.HasPrefix(contentType, "application/"):
+		return "Application"
+	default:
+		return "Other"
+	}
 }

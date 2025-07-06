@@ -3,6 +3,7 @@ package service
 import (
 	"UserPortrait/Controllers"
 	"UserPortrait/etc"
+	"UserPortrait/functions"
 	"UserPortrait/service/database"
 	"errors"
 	"fmt"
@@ -13,7 +14,7 @@ import (
 // 需别处增加判定station_id的部分
 
 func Packet2Universe(stationId uint, lossFlag bool, MAC string, IP string, datetime string, flow uint, latency uint) (err error) {
-	universeTable := etc.ChooseTable(stationId, "universe")
+	universeTable := functions.ChooseTable(stationId, "universe")
 	db, err := database.InitDB()
 	if err != nil {
 		return err
@@ -46,7 +47,7 @@ func Packet2Universe(stationId uint, lossFlag bool, MAC string, IP string, datet
 		ID = user.ID
 	}
 	// 分解时段信息
-	date, periodID, err := etc.GetPeriod(datetime)
+	date, periodID, err := functions.GetPeriod(datetime)
 	if err != nil {
 		return err
 	}
@@ -65,11 +66,11 @@ func Packet2Universe(stationId uint, lossFlag bool, MAC string, IP string, datet
 		}
 	} else {
 		// 若该记录存在，即时间段与IP均重复，则累加flow，取latency平均；若LossFlag为true，则err_count+1
-		err_count := uni.ErrCount
+		errCount := uni.ErrCount
 		flow += uni.Flow
 		if lossFlag {
-			err_count += 1
-			newuni = etc.Universe{UserID: uni.UserID, Ip: IP, Date: date, Flow: flow, Latency: uni.Latency, PeriodID: periodID, Count: uni.Count + 1, ErrCount: err_count}
+			errCount += 1
+			newuni = etc.Universe{UserID: uni.UserID, Ip: IP, Date: date, Flow: flow, Latency: uni.Latency, PeriodID: periodID, Count: uni.Count + 1, ErrCount: errCount}
 		} else {
 			latency = (uni.Latency*uni.Count + latency) / (uni.Count + 1)
 			newuni = etc.Universe{UserID: uni.UserID, Ip: IP, Date: date, Flow: flow, Latency: latency, PeriodID: periodID, Count: uni.Count + 1, ErrCount: uni.ErrCount}
@@ -86,13 +87,13 @@ func Packet2Universe(stationId uint, lossFlag bool, MAC string, IP string, datet
 // 在Universe更改后执行，更新基站记录
 
 func Packet2BaseStation(stationId uint, lossFlag bool, datetime string, flow uint, latency uint) error {
-	stationTable := etc.ChooseTable(stationId, "base_station")
+	stationTable := functions.ChooseTable(stationId, "base_station")
 	db, err := database.InitDB()
 	if err != nil {
 		return err
 	}
 	var sql = Controllers.SqlController{DB: db}
-	date, periodID, err := etc.GetPeriod(datetime)
+	date, periodID, err := functions.GetPeriod(datetime)
 	if err != nil {
 		fmt.Println(err)
 		return err

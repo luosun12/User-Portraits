@@ -2,7 +2,7 @@ package capture
 
 import (
 	"UserPortrait/configs"
-	"UserPortrait/etc"
+	"UserPortrait/functions"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -39,7 +39,7 @@ var timeout time.Duration = 30 * time.Second
 var filter string = "tcp or udp or (ip and (port 80 or port 443))"
 var excludeIP = []string{
 	configs.DBHost[:13],
-	etc.GetLocalIP(),
+	functions.GetLocalIP(),
 }
 
 func capturePackets(device string) {

@@ -3,7 +3,7 @@ package Controllers
 
 import (
 	"UserPortrait/configs"
-	"UserPortrait/etc"
+	"UserPortrait/functions"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -35,7 +35,7 @@ type LocInfo struct {
 // GetLocation 调用腾讯地图API获取IP地址的位置信息
 func GetLocation(ip string) (LocInfo, error) {
 	url := fmt.Sprintf("/ws/location/v1/ip?ip=%s&key=%s", ip, configs.TencentMapKey)
-	sig := etc.GetMD5Hash(url + configs.TencentSK)
+	sig := functions.GetMD5Hash(url + configs.TencentSK)
 	requestURL := fmt.Sprintf("https://apis.map.qq.com%s&sig=%s", url, sig)
 	method := "GET"
 

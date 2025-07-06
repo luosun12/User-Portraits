@@ -2,7 +2,7 @@ package service
 
 import (
 	"UserPortrait/Controllers"
-	"UserPortrait/etc"
+	"UserPortrait/functions"
 	"UserPortrait/service/database"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -22,9 +22,9 @@ func GetBaseStationInfo(c *gin.Context) {
 	}
 	stationId, _ := strconv.ParseUint(c.Query("station_id"), 10, 32)
 	//fmt.Printf("Query Num Type:%T,%T", stationId, c.Query("station_id"))
-	TableName := etc.ChooseTable(uint(stationId), "base_station")
+	TableName := functions.ChooseTable(uint(stationId), "base_station")
 	sql := Controllers.SqlController{DB: db}
-	Yesterday, Today, lastPeriodId, currPeriodId, err := etc.GetDailyInfo()
+	Yesterday, Today, lastPeriodId, currPeriodId, err := functions.GetDailyInfo()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "获取时间信息失败,请重试",

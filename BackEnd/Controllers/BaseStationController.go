@@ -2,6 +2,7 @@ package Controllers
 
 import (
 	"UserPortrait/etc"
+	"UserPortrait/functions"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
@@ -56,7 +57,7 @@ func (s *SqlController) DailyStationRecords(stationId uint, TableName string, ye
 	var entity etc.StationInterface
 	// 更新实例的静态信息
 	entity.StationInfo.StationID = stationId
-	entity.StationInfo.Latitute, entity.StationInfo.Longitude = etc.ChooseStationLoc(stationId)
+	entity.StationInfo.Latitute, entity.StationInfo.Longitude = functions.ChooseStationLoc(stationId)
 	entity.CurrentPeriod = currID
 
 	// 数据库条件遍历，获取昨日、今日近24小时记录

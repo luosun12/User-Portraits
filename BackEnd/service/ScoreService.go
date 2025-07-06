@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// 用户提交评分
 func SubmitScore(c *gin.Context) {
 	userID, _ := strconv.ParseUint(c.PostForm("id"), 10, 32)
 	score, _ := strconv.ParseFloat(c.PostForm("score"), 32)
@@ -54,6 +55,7 @@ func SubmitScore(c *gin.Context) {
 	}
 }
 
+// 获取每日平均分的map列表
 func GetAverageScore(c *gin.Context) {
 	db, err := database.InitDB()
 	if err != nil {

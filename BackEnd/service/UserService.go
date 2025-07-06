@@ -4,6 +4,7 @@ import (
 	"UserPortrait/Controllers"
 	"UserPortrait/configs"
 	"UserPortrait/etc"
+	"UserPortrait/functions"
 	"UserPortrait/service/database"
 	"UserPortrait/token"
 	"errors"
@@ -96,7 +97,7 @@ func Login(c *gin.Context) {
 	}
 	var sql = Controllers.SqlController{DB: db}
 	var user etc.Userinfo
-	username := context.PostForm("username")
+	username := context.PostForm("login_name")
 	user, err = sql.FindUserByName(username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -115,7 +116,7 @@ func Login(c *gin.Context) {
 			return
 		}
 	} else {
-		if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(context.PostForm("password"))) == nil {
+		if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(context.PostForm("login_password"))) == nil {
 			// 登录成功，返回生成的token
 			Token, errfortoken := token.GenerateUserToken(user.ID)
 			for errfortoken != nil {
@@ -225,7 +226,7 @@ func GetUserDailyFlow(c *gin.Context) {
 	id_string := c.Query("user_id")
 	userId, _ := strconv.ParseUint(id_string, 10, 64)
 	sql := Controllers.SqlController{DB: db}
-	Yesterday, Today, lastPeriodId, currPeriodId, err := etc.GetDailyInfo()
+	Yesterday, Today, lastPeriodId, currPeriodId, err := functions.GetDailyInfo()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "获取时间信息失败,请重试",
